@@ -61,6 +61,8 @@ SCREEN_SIZE = (900, 600)
 screen = pygame.display.set_mode(SCREEN_SIZE, 0, 32)
 location = np.array((200.0, 50.0))
 velocity = np.array((0.2, 0.0))
+RADIUS_CAR = 15
+RADIUS_OBSTACLES = 35
 background = pygame.surface.Surface(SCREEN_SIZE).convert()
 background.fill((0,0,0))
 obstacles = [[50, 50], [450, 300], [700, 300], [100, 400]]
@@ -81,11 +83,11 @@ while True:
 
     location += velocity[0]
     screen.blit(background, (0,0))
-    pygame.draw.circle(screen, (255,55,10),(int(location[0]),int(location[1])), 15)
+    pygame.draw.circle(screen, (255,55,10),(int(location[0]),int(location[1])), RADIUS_CAR)
 
-    if detect_collision(obstacles, 15, 35):
+    if detect_collision(obstacles, RADIUS_CAR, RADIUS_OBSTACLES):
 		location = np.array((200.0, 50.0))
     for i in obstacles:
-    	pygame.draw.circle(screen, (25,55,100), i, 35)
+    	pygame.draw.circle(screen, (25,55,100), i, RADIUS_OBSTACLES)
     pygame.display.update()
 
