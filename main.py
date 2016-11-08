@@ -3,8 +3,12 @@ import pygame
 from pygame.locals import *
 import numpy as np
 import math
+import model
 
 #state variables
+epochs = 1000
+gamma = 0.9
+epsilon = 1
 angle = 0.005
 width, height = (30, 30)
 SCREEN_SIZE = (900, 600)
@@ -15,6 +19,7 @@ RADIUS_OBSTACLES = 35
 obstacles = [[50, 50], [450, 300], [700, 300], [100, 400]]
 width, height = (30, 30)
 SCREEN_SIZE = (900, 600)
+model = model.create_model()
 
 #updates the velocity to turn towards an angle
 def vel_update(angle, vel):
