@@ -72,6 +72,7 @@ def get_state(velocity, location, obstacles):
 
 #reward system for our agent
 def get_reward(obstacles, RADIUS_CAR, RADIUS_OBSTACLES):
+	global location
 	if detect_collision(obstacles, RADIUS_CAR, RADIUS_OBSTACLES):
 		location = np.array((200.0, 50.0))
 		return -100
@@ -104,12 +105,11 @@ while True:
         velocity = vel_update(-1*angle, velocity)
 
     #print get_state(velocity, location, obstacles)
-
     location += velocity[0]
+    get_reward(obstacles, RADIUS_CAR, RADIUS_OBSTACLES)
     screen.blit(background, (0,0))
     pygame.draw.circle(screen, (255,55,10),(int(location[0]),int(location[1])), RADIUS_CAR)
 
     for i in obstacles:
     	pygame.draw.circle(screen, (25,55,100), i, RADIUS_OBSTACLES)
     pygame.display.update()
-
