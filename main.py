@@ -4,7 +4,17 @@ from pygame.locals import *
 import numpy as np
 import math
 
+#state variables
 angle = 0.005
+width, height = (30, 30)
+SCREEN_SIZE = (900, 600)
+location = np.array((200.0, 50.0))
+velocity = np.array((0.2, 0.0))
+RADIUS_CAR = 15
+RADIUS_OBSTACLES = 35
+obstacles = [[50, 50], [450, 300], [700, 300], [100, 400]]
+width, height = (30, 30)
+SCREEN_SIZE = (900, 600)
 
 #updates the velocity to turn towards an angle
 def vel_update(angle, vel):
@@ -55,17 +65,26 @@ def get_state(velocity, location, obstacles):
 	i3y = (obstacles[3][1]-location[1])/d3
 	return [vx, vy, d0/1000, d1/1000, d2/1000, d3/1000, i0x, i0y, i1x, i1y, i2x, i2y, i3x, i3y]
 
+#reward system for our agent
+def get_reward(obstacles, RADIUS_CAR, RADIUS_OBSTACLES):
+	if detect_collision(obstacles, RADIUS_CAR, RADIUS_OBSTACLES):
+		location = np.array((200.0, 50.0))
+		return -100
+	return -1
+
+#action to be taken for any given NN output
+def get_action(action, velocity):
+	if action == 0:
+		return vel_update(angle, velocity)
+	elif action == 1:
+		return vel_update(-1*angle, velocity)
+	else: 
+		return velocity
+
 pygame.init()
-width, height = (30, 30)
-SCREEN_SIZE = (900, 600)
 screen = pygame.display.set_mode(SCREEN_SIZE, 0, 32)
-location = np.array((200.0, 50.0))
-velocity = np.array((0.2, 0.0))
-RADIUS_CAR = 15
-RADIUS_OBSTACLES = 35
 background = pygame.surface.Surface(SCREEN_SIZE).convert()
 background.fill((0,0,0))
-obstacles = [[50, 50], [450, 300], [700, 300], [100, 400]]
 
 while True:
     key_pressed = pygame.key.get_pressed()
@@ -79,14 +98,12 @@ while True:
     elif key_pressed[K_RIGHT]:
         velocity = vel_update(-1*angle, velocity)
 
-    print get_state(velocity, location, obstacles)
+    #print get_state(velocity, location, obstacles)
 
     location += velocity[0]
     screen.blit(background, (0,0))
     pygame.draw.circle(screen, (255,55,10),(int(location[0]),int(location[1])), RADIUS_CAR)
 
-    if detect_collision(obstacles, RADIUS_CAR, RADIUS_OBSTACLES):
-		location = np.array((200.0, 50.0))
     for i in obstacles:
     	pygame.draw.circle(screen, (25,55,100), i, RADIUS_OBSTACLES)
     pygame.display.update()
