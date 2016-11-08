@@ -5,14 +5,15 @@ import numpy as np
 import math
 
 angle = 0.005
+
+#updates the velocity to turn towards an angle
 def vel_update(angle, vel):
 	rot = np.array(([math.cos(angle), -math.sin(angle)], [math.sin(angle), math.cos(angle)]))
 	rot = np.matrix(rot)
 	vel = np.matrix(vel)
 	return np.transpose(rot*np.transpose(vel)).tolist()
 
-#print vel_update(0.0001, np.array([5, 5]))
-
+#detects collision b/w the agent and all the obstacles
 def detect_collision(obstacles, r1, r2):
 	if location[0] <= 0 or location[0] >= SCREEN_SIZE[0] or location[1] <= 0 or location[1] >= SCREEN_SIZE[1]:
 		return True 
@@ -21,6 +22,38 @@ def detect_collision(obstacles, r1, r2):
 		if dist <= r1+r2 :
 			return True
 	return False
+
+#returns the distances from all the obstacles as a list
+def get_distances(location, obstacles):
+	distances = []
+	for i in obstacles:
+		dist = math.sqrt((location[0]-i[0])**2 + (location[1]-i[1])**2)
+		distances.append(dist)
+	return distances
+
+#this returns the state ot any particular instant
+def get_state(velocity, location, obstacles):
+	thres = 200
+	try:
+		vx = velocity[0]
+		vy = velocity[1]
+	except Exception as e:
+		vx = velocity[0][0]
+		vy = velocity[0][1]
+	distances = get_distances(location, obstacles)
+	d0 = distances[0]
+	d1 = distances[1]
+	d2 = distances[2]
+	d3 = distances[3]
+	i0x = (obstacles[0][0]-location[0])/d0
+	i0y = (obstacles[0][1]-location[1])/d0
+	i1x = (obstacles[1][0]-location[0])/d1
+	i1y = (obstacles[1][1]-location[1])/d1
+	i2x = (obstacles[2][0]-location[0])/d2
+	i2y = (obstacles[2][1]-location[1])/d2
+	i3x = (obstacles[3][0]-location[0])/d3
+	i3y = (obstacles[3][1]-location[1])/d3
+	return [vx, vy, d0/1000, d1/1000, d2/1000, d3/1000, i0x, i0y, i1x, i1y, i2x, i2y, i3x, i3y]
 
 pygame.init()
 width, height = (30, 30)
@@ -37,13 +70,14 @@ while True:
     for event in pygame.event.get():
         if event.type == QUIT:
             exit()
+  
     if key_pressed[K_LEFT]:
         velocity = vel_update(angle, velocity)
-        print location, velocity
         
     elif key_pressed[K_RIGHT]:
         velocity = vel_update(-1*angle, velocity)
-        print location, velocity
+
+    print get_state(velocity, location, obstacles)
 
     location += velocity[0]
     screen.blit(background, (0,0))
