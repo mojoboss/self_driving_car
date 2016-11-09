@@ -4,6 +4,7 @@ from pygame.locals import *
 import numpy as np
 import math
 import model
+import random
 
 #state variables
 epochs = 1000
@@ -13,7 +14,7 @@ angle = 0.005
 width, height = (30, 30)
 SCREEN_SIZE = (900, 600)
 location = np.array((200.0, 50.0))
-velocity = np.array((0.2, 0.0))
+velocity = np.array((0.4, 0.2))
 RADIUS_CAR = 15
 RADIUS_OBSTACLES = 35
 obstacles = [[50, 50], [450, 300], [700, 300], [100, 400]]
@@ -74,8 +75,11 @@ def get_state(velocity, location, obstacles):
 def get_reward(obstacles, RADIUS_CAR, RADIUS_OBSTACLES):
 	global location
 	if detect_collision(obstacles, RADIUS_CAR, RADIUS_OBSTACLES):
-		location = np.array((200.0, 50.0))
-		return -100
+		x = np.random.randint(80, 800)*1.0
+		y = np.random.randint(80, 500)*1.0
+		#location = np.array((200.0, 50.0))
+		location = np.array((x, y))
+		return -10
 	return -1
 
 #action to be taken for any given NN output
@@ -97,7 +101,7 @@ while True:
     for event in pygame.event.get():
         if event.type == QUIT:
             exit()
-  
+  	'''
     if key_pressed[K_LEFT]:
         velocity = vel_update(angle, velocity)
         
@@ -106,7 +110,33 @@ while True:
 
     #print get_state(velocity, location, obstacles)
     location += velocity[0]
-    get_reward(obstacles, RADIUS_CAR, RADIUS_OBSTACLES)
+    '''
+    init_state = get_state(velocity, location, obstacles)
+    qval = model.predict(np.array(init_state).reshape(1, 14), batch_size = 1)
+    
+    if random.random() < epsilon:
+    	action = np.random.randint(0, 3)
+    else:
+    	action = np.argmax(qval)
+
+    velocity = get_action(action, velocity)	
+    location += velocity[0]
+
+    reward = get_reward(obstacles, RADIUS_CAR, RADIUS_OBSTACLES)
+    new_state = get_state(velocity, location, obstacles)
+    newQ = model.predict(np.array(new_state).reshape(1, 14), batch_size = 1)
+    maxQ = np.max(newQ)
+    y =np.zeros((1, 3))
+    y[:] = qval[:]
+    if reward == -100:
+    	update = (reward + (gamma*maxQ))
+    else:
+    	update = reward
+    y[0][action] = update
+    model.fit(np.array(init_state).reshape(1, 14), y, batch_size=1, nb_epoch=1, verbose=1)
+    if epsilon > 0.1:
+    	epsilon -= (1/epochs)
+
     screen.blit(background, (0,0))
     pygame.draw.circle(screen, (255,55,10),(int(location[0]),int(location[1])), RADIUS_CAR)
 
